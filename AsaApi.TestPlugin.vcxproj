@@ -70,6 +70,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)Build\</OutDir>
+    <IntDir>$(OutDir)\$(Platform)</IntDir>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)lib;$(LibraryPath)</LibraryPath>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -125,10 +132,12 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;ASAAPITESTPLUGIN_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PROJECTNAME="$(TestPlugin)";NDEBUG;ASAAPITESTPLUGIN_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_ALL_CX20_DEPRECATION_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SILENCE_CX17_CODECVT_HEADER_DEPRECATION_WARNINGS;_SILENCE_ALL_CX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(SolutionDir)Includes;$(SolutionDir)Source\Public;$(SolutionDir)..\AsaApi\AsaApi\Core\Public;$(SolutionDir)..\AsaApi\AsaApi\Core\Public\API\UE;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -136,7 +145,23 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>$(SolutionDir)..\AsaApi\out_lib\AsaApi.lib;Ws2_32.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>mkdir "$(SolutionDir)Output\$(ProyecyName)\"
+copy /y "$(TargetDir)$(TargetFileName)" "$(SolutionDir)Output\$(ProjectName)\$(TargetFileName).arkapi"
+copy /y "$(TargetPath)" "$(SolutionDir)Output\$(ProyectName)\$(TargetFileName)"
+copy /y "$(SolutionDir)Config\config.json" "$(SolutionDir)Output\$(ProjectName)\config.json"
+copy /y "$(SolutionDir)Config\config-commented.json" "$(SolutionDir)Output\$(ProjectName)\config-commented.json"
+copy /y "$(SolutionDir)Config\config-commented-esp.json" "$(SolutionDir)Output\$(ProjectName)\config-commented-esp.json"
+copy /y "$(SolutionDir)Config\Plugininfo.json" "$(SolutionDir)Output\$(ProjectName)\Plugininfo.json"
+fit add -A
+git commit -m "Auto push after build __TIMESTAMP__"
+git push</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>if exist "$(TargetDir)$(TargetFile).arkapi" del /q "$(TargetDir)$TargetFileName).arkapi"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="framework.h" />
