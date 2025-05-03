@@ -1,0 +1,7 @@
+{
+    "FullName": "TestPlugin",
+    "Description": "A test plugin for demonstration purposes.",
+    "Version": "1.0.0",
+    "MinApiVersion": "1.18",
+    "Author": "JahManut"
+}
