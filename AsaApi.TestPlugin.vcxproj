@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -132,7 +132,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>PROJECTNAME="$(TestPlugin)";NDEBUG;ASAAPITESTPLUGIN_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_ALL_CX20_DEPRECATION_WARNINGS;_CRT_SECURE_NO_WARNINGS;_SILENCE_CX17_CODECVT_HEADER_DEPRECATION_WARNINGS;_SILENCE_ALL_CX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PROJECTNAME="$(TestPlugin)";NDEBUG;ASAAPITESTPLUGIN_EXPORTS;_WINDOWS;_USRDLL;_SILENCE_ALL_CX20_DEPRECATION_WARNINGS;_SILENCE_CX17_CODECVT_HEADER_DEPRECATION_WARNINGS;_SILENCE_ALL_CX17_DEPRECATION_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -167,7 +167,7 @@ git push</Command>
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Source\Public\AsaApi.TestPlugin.h" />
-    <ClInclude Include="ThirdParty\fmt\format.h" />
+    <ClInclude Include="Source\Public\format.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\AsaApi.TestPlugin.cpp" />
@@ -178,6 +178,7 @@ git push</Command>
     <None Include="Config\config-dev.json" />
     <None Include="Config\config.json" />
     <None Include="Config\plugininfo.json" />
+    <None Include="vcpkg.json" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
