@@ -7,3 +7,4 @@ namespace TestPlugin
 	inline nlohmann::json config;
 	inline bool isDebug{ false };
 }
+
