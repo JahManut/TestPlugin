@@ -1,9 +1,9 @@
 #pragma once
 
-//#include "json.hpp"
+#include "json.hpp"
 
-//namespace TestPlugin
-//{
-//	inline nlohmann::json config;
-//	inline bool isDebug{ false };
-//}
+namespace TestPlugin
+{
+	inline nlohmann::json config;
+	inline bool isDebug{ false };
+}

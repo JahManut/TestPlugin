@@ -167,6 +167,7 @@ git push</Command>
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Source\Public\AsaApi.TestPlugin.h" />
+    <ClInclude Include="ThirdParty\fmt\format.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\AsaApi.TestPlugin.cpp" />
