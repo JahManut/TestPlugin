@@ -1,5 +1,6 @@
 {
-    "General": {
-        "Debug": true
+    "settings": {
+        "welcome_message": "¡Bienvenido, {}!",
+        "message_color": "green"
     }
 }

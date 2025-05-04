@@ -27,9 +27,6 @@
     <ClInclude Include="pch.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Public\AsaApi.TestPlugin.h">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Public\format.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
@@ -75,9 +72,12 @@
     <ClInclude Include="fmt\xchar.h">
       <Filter>fmt</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Public\TestPlugin.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\AsaApi.TestPlugin.cpp">
+    <ClCompile Include="Source\TestPlugin.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
   </ItemGroup>

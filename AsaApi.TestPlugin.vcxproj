@@ -22,8 +22,9 @@
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
     <ProjectGuid>{3bfd145f-e94f-4b58-9b4a-0240098364a5}</ProjectGuid>
-    <RootNamespace>AsaApiTestPlugin</RootNamespace>
+    <RootNamespace>TestPlugin</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>TestPlugin</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -183,11 +184,11 @@ git push</Command>
     <ClInclude Include="fmt\xchar.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="Source\Public\AsaApi.TestPlugin.h" />
     <ClInclude Include="Source\Public\format.h" />
+    <ClInclude Include="Source\Public\TestPlugin.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\AsaApi.TestPlugin.cpp" />
+    <ClCompile Include="Source\TestPlugin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Config\config-commented-esp.json" />
