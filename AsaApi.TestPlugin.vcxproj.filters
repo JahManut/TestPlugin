@@ -27,9 +27,6 @@
     <ClInclude Include="pch.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Public\format.h">
-      <Filter>Archivos de encabezado</Filter>
-    </ClInclude>
     <ClInclude Include="fmt\args.h">
       <Filter>fmt</Filter>
     </ClInclude>

@@ -1,35 +1,28 @@
-﻿#include <API/ARK/Ark.h>
+﻿#include <json.hpp>
+
+#include <API/ARK/Ark.h>
 #include <Tools.h>
+#include "ihooks.h"
+#include "iApiUtils.h"
 
 #include <fstream>
 #include <string>
-#include <json.hpp>
 #include <fmt/format.h>
-#include <format.h>
 
 #pragma comment(lib, "AsaApi.lib")
+#pragma comment(lib, "Permissions.lib")
 
 #define PROJECT_NAME "TestPlugin"
 
 // Variables globales configurables
-std::string welcome_message = "¡Bienvenido, {}!";
-FColor message_color = FColorList::Green;
+std::string direct_message_template = "{0} recibió: '{1}' de {2}";
+FLinearColor direct_message_color = FLinearColor(0.f, 1.f, 0.f, 1.f);
 
 // ----------------------------------------
-// Función para convertir string a FColor
-FColor GetColorFromName(const std::string& color_name)
+// Función para obtener la ruta de config.json
+inline std::string GetConfigPath()
 {
-    if (color_name == "red") return FColorList::Red;
-    if (color_name == "green") return FColorList::Green;
-    if (color_name == "blue") return FColorList::Blue;
-    if (color_name == "yellow") return FColorList::Yellow;
-    if (color_name == "orange") return FColorList::Orange;
-    if (color_name == "white") return FColorList::White;
-    if (color_name == "black") return FColorList::Black;
-    if (color_name == "cyan") return FColorList::Cyan;
-    if (color_name == "magenta") return FColorList::Magenta;
-
-    return FColorList::Green; // por defecto
+    return AsaApi::Tools::GetCurrentDir() + "/ArApi/Plugins/TestPlugin/config.json";
 }
 
 // ----------------------------------------
@@ -38,8 +31,7 @@ void LoadConfig()
 {
     try
     {
-        const std::string config_path = AsaApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/TestPlugin/Config/config.json";
-        std::ifstream file(config_path);
+        std::ifstream file(GetConfigPath());
         if (!file.is_open())
         {
             Log::GetLog()->warn("No se pudo abrir config.json, se usará configuración por defecto.");
@@ -49,18 +41,16 @@ void LoadConfig()
         nlohmann::json config;
         file >> config;
 
-        if (config.contains("welcome_message"))
-        {
-            welcome_message = config["welcome_message"].get<std::string>();
-            Log::GetLog()->info("Mensaje cargado: {}", welcome_message);
+        direct_message_template = config.value("direct_message_template", direct_message_template);
+        if (config.contains("direct_message_color") && config["direct_message_color"].is_array()) {
+            auto arr = config["direct_message_color"];
+            direct_message_color.R = arr[0].get<float>();
+            direct_message_color.G = arr[1].get<float>();
+            direct_message_color.B = arr[2].get<float>();
+            direct_message_color.A = arr[3].get<float>();
         }
 
-        if (config.contains("message_color"))
-        {
-            std::string color_str = config["message_color"].get<std::string>();
-            message_color = GetColorFromName(color_str);
-            Log::GetLog()->info("Color del mensaje: {}", color_str);
-        }
+        Log::GetLog()->info("Config cargado correctamente");
     }
     catch (const std::exception& ex)
     {
@@ -69,24 +59,95 @@ void LoadConfig()
 }
 
 // ----------------------------------------
-// Hook: jugador entra al mundo
-DECLARE_HOOK(AShooterPlayerController_ServerRequestJoinWorld, void, AShooterPlayerController*);
+// Hook: enviar mensaje directo
+DECLARE_HOOK(AShooterGameMode_SendServerDirectMessage, void,
+    AShooterGameMode*, FString*, FString*, FLinearColor, bool, int, int, FString*, FString*);
 
-void Hook_AShooterPlayerController_ServerRequestJoinWorld(AShooterPlayerController* _this)
+void Hook_AShooterGameMode_SendServerDirectMessage(
+    AShooterGameMode* _this,
+    FString* PlayerId,
+    FString* MessageText,
+    FLinearColor OriginalColor,
+    bool bIsBold,
+    int ReceiverTeamId,
+    int ReceiverPlayerID,
+    FString* PlayerName,
+    FString* SenderId)
 {
-    if (!_this)
-        return;
+    std::string eos_id = TCHAR_TO_UTF8(**PlayerId);
+    std::string original = TCHAR_TO_UTF8(**MessageText);
+    std::string sender_id = TCHAR_TO_UTF8(**SenderId);
 
-    FString f_player_name = AsaApi::IApiUtils::GetCharacterName(_this);
-    std::string player_name = TCHAR_TO_UTF8(*f_player_name);
+    std::string formatted = fmt::format(
+        direct_message_template,
+        eos_id,
+        original,
+        sender_id
+    );
+    FString fmsg(formatted.c_str());
 
-    std::string formatted = fmt::format(welcome_message, player_name);
-    FString message(formatted.c_str());
-
-    AsaApi::GetApiUtils().SendServerMessage(_this, message_color, *message);
-
-    AShooterPlayerController_ServerRequestJoinWorld_original(_this);
+    AShooterGameMode_SendServerDirectMessage_original(
+        _this,
+        PlayerId,
+        &fmsg,
+        direct_message_color,
+        bIsBold,
+        ReceiverTeamId,
+        ReceiverPlayerID,
+        PlayerName,
+        SenderId);
 }
+
+// ----------------------------------------
+// Comando chat personalizado: '/dm <PlayerName> <Message>'
+void DirectMessageCmd(AShooterPlayerController* caller, FString* fullCmd, int arg1, int arg2)
+{
+    TArray<FString> parts;
+    fullCmd->ParseIntoArray(parts, TEXT(" "), true);
+    if (parts.Num() < 3)
+    {
+        AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Red, TEXT("Uso: /dm <PlayerName> <mensaje>"));
+        return;
+    }
+    FString targetName = parts[1];
+    FString msg;
+    for (int32 i = 2; i < parts.Num(); ++i)
+    {
+        msg += parts[i];
+        if (i < parts.Num() - 1)
+            msg += TEXT(" ");
+    }
+
+    UWorld* world = AsaApi::GetApiUtils().GetWorld();
+    if (!world) return;
+
+    for (auto weakPC : world->PlayerControllerListField())
+    {
+        APlayerController* controller = weakPC.Get(false);
+        if (!controller) continue;
+        auto* pc = static_cast<AShooterPlayerController*>(controller);
+        if (!pc) continue;
+
+        if (AsaApi::IApiUtils::GetCharacterName(pc) == targetName)
+        {
+            AsaApi::GetApiUtils().SendServerMessage(pc, direct_message_color, *msg);
+            break;
+        }
+    }
+}
+
+void ReloadConfigCmd(AShooterPlayerController* caller, FString* fullCmd, int arg1, int arg2)  
+{  
+   
+   try {  
+       LoadConfig();  
+       AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Green, TEXT("Config recargado."));  
+   }  
+   catch (const std::exception&) {  
+       AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Red, TEXT("Error recargando config."));  
+   }  
+}
+
 
 // ----------------------------------------
 // Hook: OnServerReady (BeginPlay)
@@ -108,10 +169,16 @@ void Hook_AShooterGameMode_BeginPlay(AShooterGameMode* _this)
 extern "C" __declspec(dllexport) void Plugin_Init()
 {
     Log::Get().Init(PROJECT_NAME);
+    LoadConfig();
 
     AsaApi::GetHooks().SetHook("AShooterGameMode.BeginPlay()", Hook_AShooterGameMode_BeginPlay, &AShooterGameMode_BeginPlay_original);
-    AsaApi::GetHooks().SetHook("AShooterPlayerController.ServerRequestJoinWorld", Hook_AShooterPlayerController_ServerRequestJoinWorld, &AShooterPlayerController_ServerRequestJoinWorld_original);
+    AsaApi::GetHooks().SetHook(
+        "AShooterGameMode.SendServerDirectMessage(FString&,FString&,FLinearColor,bool,int,int,FString&,FString&)",
+        Hook_AShooterGameMode_SendServerDirectMessage,
+        &AShooterGameMode_SendServerDirectMessage_original);
 
+    AsaApi::GetCommands().AddChatCommand("/dm", &DirectMessageCmd);
+    AsaApi::GetCommands().AddChatCommand("/reloadconfig", &ReloadConfigCmd);
 
     if (AsaApi::GetApiUtils().GetStatus() == AsaApi::ServerStatus::Ready)
     {
@@ -122,7 +189,9 @@ extern "C" __declspec(dllexport) void Plugin_Init()
 extern "C" __declspec(dllexport) void Plugin_Unload()
 {
     AsaApi::GetHooks().DisableHook("AShooterGameMode.BeginPlay()", &AShooterGameMode_BeginPlay_original);
-    AsaApi::GetHooks().DisableHook("AShooterPlayerController.ServerRequestJoinWorld", &AShooterPlayerController_ServerRequestJoinWorld_original);
+    AsaApi::GetHooks().DisableHook(
+        "AShooterGameMode.SendServerDirectMessage(FString&,FString&,FLinearColor,bool,int,int,FString&,FString&)",
+        &AShooterGameMode_SendServerDirectMessage_original);
 
     Log::GetLog()->info("TestPlugin Unloaded");
 }
