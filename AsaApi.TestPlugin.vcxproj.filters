@@ -72,6 +72,9 @@
     <ClInclude Include="Source\Public\TestPlugin.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Public\Permissions.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\TestPlugin.cpp">

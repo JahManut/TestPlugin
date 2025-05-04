@@ -149,7 +149,8 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(SolutionDir)..\AsaApi\out_lib\AsaApi.lib;Ws2_32.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\AsaApi\out_lib\AsaApi.lib;$(SolutionDir)Lib\AsaApi.lib;$(SolutionDir)Lib\Permissions.lib;$(SolutionDir)Lib\libmysql.lib;$(SolutionDir)mysqlclient.lib;Permissions.lib;Ws2_32.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)AsaApi\Plugins\Permissions\Lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>mkdir "$(SolutionDir)Output\$(ProyecyName)\"
@@ -184,6 +185,7 @@ git push</Command>
     <ClInclude Include="fmt\xchar.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Source\Public\Permissions.h" />
     <ClInclude Include="Source\Public\TestPlugin.h" />
   </ItemGroup>
   <ItemGroup>

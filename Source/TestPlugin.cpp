@@ -3,7 +3,7 @@
 #include <API/ARK/Ark.h>
 #include <Tools.h>
 #include "ihooks.h"
-#include "iApiUtils.h"
+#include "Ark/ArkApiUtils.h"
 
 #include <fstream>
 #include <string>
@@ -11,10 +11,15 @@
 
 #pragma comment(lib, "AsaApi.lib")
 #pragma comment(lib, "Permissions.lib")
+#pragma comment(lib, "libmysql.lib")
+#pragma comment(lib, "mysqlclient.lib")
+
+#include <Permissions.h>
 
 #define PROJECT_NAME "TestPlugin"
 
 // Variables globales configurables
+std::string dm_command = "/dm";  // comando por defecto, configurable desde JSON
 std::string direct_message_template = "{0} recibió: '{1}' de {2}";
 FLinearColor direct_message_color = FLinearColor(0.f, 1.f, 0.f, 1.f);
 
@@ -40,6 +45,9 @@ void LoadConfig()
 
         nlohmann::json config;
         file >> config;
+
+        // Comando DM configurable
+        dm_command = config.value("dm_command", dm_command);
 
         direct_message_template = config.value("direct_message_template", direct_message_template);
         if (config.contains("direct_message_color") && config["direct_message_color"].is_array()) {
@@ -138,7 +146,20 @@ void DirectMessageCmd(AShooterPlayerController* caller, FString* fullCmd, int ar
 
 void ReloadConfigCmd(AShooterPlayerController* caller, FString* fullCmd, int arg1, int arg2)  
 {  
-   
+    // Extraer EOS ID del jugador (uint64)
+    uint64_t raw_id = AsaApi::GetApiUtils().GetPlayerID(caller);
+    // Convertir a FString
+    FString eos_id = FString::Printf(TEXT("%llu"), raw_id);
+
+    // Verificar si el jugador pertenece al grupo "Admin" en Permissions
+    if (!Permissions::IsPlayerInGroup(eos_id, FString(TEXT("Admin"))))
+    {
+        AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Red,
+            TEXT("No tienes permiso para recargar config."));
+        return;
+    }
+
+    // Ejecutar recarga
    try {  
        LoadConfig();  
        AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Green, TEXT("Config recargado."));  
@@ -177,7 +198,7 @@ extern "C" __declspec(dllexport) void Plugin_Init()
         Hook_AShooterGameMode_SendServerDirectMessage,
         &AShooterGameMode_SendServerDirectMessage_original);
 
-    AsaApi::GetCommands().AddChatCommand("/dm", &DirectMessageCmd);
+    AsaApi::GetCommands().AddChatCommand(dm_command.c_str(), &DirectMessageCmd);
     AsaApi::GetCommands().AddChatCommand("/reloadconfig", &ReloadConfigCmd);
 
     if (AsaApi::GetApiUtils().GetStatus() == AsaApi::ServerStatus::Ready)

@@ -1,4 +1,4 @@
-#pragma once
+#pragma comment(lib, "Permissions.lib")
 
 #include <API/Ark/Ark.h>
 
