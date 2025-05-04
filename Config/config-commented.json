@@ -1,6 +1,4 @@
 {
-    "settings": {
-        "welcome_message": "¡Bienvenido, {}!",
-        "message_color": "green"
-    }
+    "welcome_message": "¡Bienvenido al servidor, {}!",
+    "message_color": "green"
 }

@@ -70,22 +70,22 @@ void LoadConfig()
 
 // ----------------------------------------
 // Hook: jugador entra al mundo
-DECLARE_HOOK(AShooterGameMode_HandleNewPlayer, void, AShooterGameMode*, AShooterPlayerController*);
+DECLARE_HOOK(AShooterPlayerController_ServerRequestJoinWorld, void, AShooterPlayerController*);
 
-void Hook_AShooterGameMode_HandleNewPlayer(AShooterGameMode* _this, AShooterPlayerController* player_controller)
+void Hook_AShooterPlayerController_ServerRequestJoinWorld(AShooterPlayerController* _this)
 {
-    if (!player_controller)
+    if (!_this)
         return;
 
-    FString f_player_name = AsaApi::IApiUtils::GetCharacterName(player_controller);
+    FString f_player_name = AsaApi::IApiUtils::GetCharacterName(_this);
     std::string player_name = TCHAR_TO_UTF8(*f_player_name);
 
     std::string formatted = fmt::format(welcome_message, player_name);
     FString message(formatted.c_str());
 
-    AsaApi::GetApiUtils().SendServerMessage(player_controller, message_color, *message);
+    AsaApi::GetApiUtils().SendServerMessage(_this, message_color, *message);
 
-    AShooterGameMode_HandleNewPlayer_original(_this, player_controller);
+    AShooterPlayerController_ServerRequestJoinWorld_original(_this);
 }
 
 // ----------------------------------------
@@ -110,7 +110,8 @@ extern "C" __declspec(dllexport) void Plugin_Init()
     Log::Get().Init(PROJECT_NAME);
 
     AsaApi::GetHooks().SetHook("AShooterGameMode.BeginPlay()", Hook_AShooterGameMode_BeginPlay, &AShooterGameMode_BeginPlay_original);
-    AsaApi::GetHooks().SetHook("AShooterGameMode.HandleNewPlayer", Hook_AShooterGameMode_HandleNewPlayer, &AShooterGameMode_HandleNewPlayer_original);
+    AsaApi::GetHooks().SetHook("AShooterPlayerController.ServerRequestJoinWorld", Hook_AShooterPlayerController_ServerRequestJoinWorld, &AShooterPlayerController_ServerRequestJoinWorld_original);
+
 
     if (AsaApi::GetApiUtils().GetStatus() == AsaApi::ServerStatus::Ready)
     {
@@ -121,7 +122,7 @@ extern "C" __declspec(dllexport) void Plugin_Init()
 extern "C" __declspec(dllexport) void Plugin_Unload()
 {
     AsaApi::GetHooks().DisableHook("AShooterGameMode.BeginPlay()", &AShooterGameMode_BeginPlay_original);
-    AsaApi::GetHooks().DisableHook("AShooterGameMode.HandleNewPlayer", &AShooterGameMode_HandleNewPlayer_original);
+    AsaApi::GetHooks().DisableHook("AShooterPlayerController.ServerRequestJoinWorld", &AShooterPlayerController_ServerRequestJoinWorld_original);
 
     Log::GetLog()->info("TestPlugin Unloaded");
 }
