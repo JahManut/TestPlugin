@@ -160,33 +160,9 @@ void DirectMessageCmd(AShooterPlayerController* caller, FString* fullCmd, int ar
         }
     }
 }
-  
-void ReloadConfigCmd(AShooterPlayerController* caller, FString* fullCmd, int arg1, int arg2)
-{
-    // Extrae directamente el EOS-ID y conviértelo a FString
-    uint64_t rawEOSId = AsaApi::GetApiUtils().GetPlayerID(caller);
-    FString  eosId = FString::Printf(TEXT("%llu"), rawEOSId);
-
-    // Comprueba el grupo con ese string
-    if (!Permissions::IsPlayerInGroup(eosId, TEXT("Admins")))
-    {
-        AsaApi::GetApiUtils().SendServerMessage(
-            caller,
-            FLinearColor(1.f, 0.f, 0.f, 1.f),
-            *FString(TEXT("No tienes permiso para recargar config."))
-        );
-        return;
-    }
-
-    // Ejecutar recarga
-   try {  
-       LoadConfig();  
-       AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Green, TEXT("Config recargado."));  
-   }  
-   catch (const std::exception&) {  
-       AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Red, TEXT("Error recargando config."));  
-   }  
-}
+// ----------------------------------------
+// Llamada al comando de consola testplugin.reload  
+void ConsoleReloadConfig(APlayerController* controller, FString* cmd, bool writeToLog);
 
 
 // ----------------------------------------
@@ -203,26 +179,46 @@ void Hook_AShooterGameMode_BeginPlay(AShooterGameMode* _this)
     AShooterGameMode_BeginPlay_original(_this);
     OnServerReady();
 }
-
-// ----------------------------------------
-// INIT y UNLOAD del plugin
+// ─────────────────────────────────────────────────────────────────
 extern "C" __declspec(dllexport) void Plugin_Init()
 {
     Log::Get().Init(PROJECT_NAME);
+
     LoadConfig();
+    // … tus hooks …
 
-    AsaApi::GetHooks().SetHook("AShooterGameMode.BeginPlay()", Hook_AShooterGameMode_BeginPlay, &AShooterGameMode_BeginPlay_original);
-    AsaApi::GetHooks().SetHook(
-        "AShooterGameMode.SendServerDirectMessage(FString&,FString&,FLinearColor,bool,int,int,FString&,FString&)",
-        Hook_AShooterGameMode_SendServerDirectMessage,
-        &AShooterGameMode_SendServerDirectMessage_original);
-
+    // Comando de chat
     AsaApi::GetCommands().AddChatCommand(dm_command.c_str(), &DirectMessageCmd);
-    AsaApi::GetCommands().AddChatCommand("/reloadconfig", &ReloadConfigCmd);
+
+    // ─────────────────────────────────────────────────────────────
+    // Aquí, **añade** el comando de consola:
+    AsaApi::GetCommands().AddConsoleCommand(
+        "TestPlugin.reload",     // se invoca con `cheat TestPlugin.reload`
+        &ConsoleReloadConfig     // apunta al handler
+    );
+
+    // ─────────────────────────────────────────────────────────────
 
     if (AsaApi::GetApiUtils().GetStatus() == AsaApi::ServerStatus::Ready)
     {
         OnServerReady();
+    }
+}
+void ConsoleReloadConfig(APlayerController* /*controller*/, FString* /*cmd*/, bool writeToLog)
+{
+    try
+    {
+        LoadConfig();
+
+        // Usa tu propio Log en vez de GLog
+        if (writeToLog)
+        {
+            Log::GetLog()->info("[TestPlugin] Config recargado por consola.");
+        }
+    }
+    catch (const std::exception& ex)
+    {
+        Log::GetLog()->error("[TestPlugin] Error recargando config por consola: {}", ex.what());
     }
 }
 
