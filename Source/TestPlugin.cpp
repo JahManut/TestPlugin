@@ -27,7 +27,7 @@ FLinearColor direct_message_color = FLinearColor(0.f, 1.f, 0.f, 1.f);
 // Función para obtener la ruta de config.json
 inline std::string GetConfigPath()
 {
-    return AsaApi::Tools::GetCurrentDir() + "/ArApi/Plugins/TestPlugin/config.json";
+    return AsaApi::Tools::GetCurrentDir() + "/ArkApi/Plugins/TestPlugin/config.json";
 }
 
 // ----------------------------------------
@@ -112,11 +112,28 @@ void DirectMessageCmd(AShooterPlayerController* caller, FString* fullCmd, int ar
 {
     TArray<FString> parts;
     fullCmd->ParseIntoArray(parts, TEXT(" "), true);
+
     if (parts.Num() < 3)
     {
-        AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Red, TEXT("Uso: /dm <PlayerName> <mensaje>"));
+        // 1) Construye el texto de ayuda en un FString
+        FString usage = FString::Printf(
+            TEXT("Uso: %s <PlayerName> <mensaje>"),
+            UTF8_TO_TCHAR(dm_command.c_str())
+        );
+
+        // 2) Elige un FLinearColor para rojo:
+        FLinearColor redLinear = FLinearColor(1.f, 0.f, 0.f, 1.f);
+        //    — o usa `direct_message_color` si ya lo tienes configurado.
+
+        // 3) Pasa *usage para obtener const TCHAR*
+        AsaApi::GetApiUtils().SendServerMessage(
+            caller,
+            redLinear,
+            *usage
+        );
         return;
     }
+
     FString targetName = parts[1];
     FString msg;
     for (int32 i = 2; i < parts.Num(); ++i)
@@ -143,19 +160,21 @@ void DirectMessageCmd(AShooterPlayerController* caller, FString* fullCmd, int ar
         }
     }
 }
+  
+void ReloadConfigCmd(AShooterPlayerController* caller, FString* fullCmd, int arg1, int arg2)
+{
+    // Extrae directamente el EOS-ID y conviértelo a FString
+    uint64_t rawEOSId = AsaApi::GetApiUtils().GetPlayerID(caller);
+    FString  eosId = FString::Printf(TEXT("%llu"), rawEOSId);
 
-void ReloadConfigCmd(AShooterPlayerController* caller, FString* fullCmd, int arg1, int arg2)  
-{  
-    // Extraer EOS ID del jugador (uint64)
-    uint64_t raw_id = AsaApi::GetApiUtils().GetPlayerID(caller);
-    // Convertir a FString
-    FString eos_id = FString::Printf(TEXT("%llu"), raw_id);
-
-    // Verificar si el jugador pertenece al grupo "Admin" en Permissions
-    if (!Permissions::IsPlayerInGroup(eos_id, FString(TEXT("Admin"))))
+    // Comprueba el grupo con ese string
+    if (!Permissions::IsPlayerInGroup(eosId, TEXT("Admins")))
     {
-        AsaApi::GetApiUtils().SendServerMessage(caller, FColorList::Red,
-            TEXT("No tienes permiso para recargar config."));
+        AsaApi::GetApiUtils().SendServerMessage(
+            caller,
+            FLinearColor(1.f, 0.f, 0.f, 1.f),
+            *FString(TEXT("No tienes permiso para recargar config."))
+        );
         return;
     }
 

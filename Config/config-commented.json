@@ -1,5 +1,5 @@
 {
     "dm_command": "/msg", // cambia aquí el alias del comando
-    "direct_message_template": "[{2}] {1} ➜ {0}",
-    "direct_message_color": [ 1.0, 0.0, 0.0, 1.0 ]
+    "direct_message_template": "[DM] Para {0}: \"{1}\" (de {2})",
+    "direct_message_color": [ 1.0, 0.0, 0.0, 1.0 ] // cambia el color del mensaje. RGBA
 }
