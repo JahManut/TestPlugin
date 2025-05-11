@@ -4,6 +4,7 @@
 #include <Tools.h>
 #include "ihooks.h"
 #include "Ark/ArkApiUtils.h"
+#include <Permissions.h>
 
 #include <fstream>
 #include <string>
@@ -13,8 +14,6 @@
 #pragma comment(lib, "Permissions.lib")
 #pragma comment(lib, "libmysql.lib")
 #pragma comment(lib, "mysqlclient.lib")
-
-#include <Permissions.h>
 
 #define PROJECT_NAME "TestPlugin"
 
@@ -160,10 +159,6 @@ void DirectMessageCmd(AShooterPlayerController* caller, FString* fullCmd, int ar
         }
     }
 }
-// ----------------------------------------
-// Llamada al comando de consola testplugin.reload  
-void ConsoleReloadConfig(APlayerController* controller, FString* cmd, bool writeToLog);
-
 
 // ----------------------------------------
 // Hook: OnServerReady (BeginPlay)
@@ -179,55 +174,53 @@ void Hook_AShooterGameMode_BeginPlay(AShooterGameMode* _this)
     AShooterGameMode_BeginPlay_original(_this);
     OnServerReady();
 }
-// ─────────────────────────────────────────────────────────────────
+
+
+// 1) Prototype (forward-declaration) — debe ir **antes** de Plugin_Init:
+void ConsoleReloadConfig(APlayerController* controller, FString* cmd, bool writeToLog);
+
+// 2) Plugin_Init con el registro del comando:
 extern "C" __declspec(dllexport) void Plugin_Init()
 {
     Log::Get().Init(PROJECT_NAME);
-
     LoadConfig();
     // … tus hooks …
 
-    // Comando de chat
     AsaApi::GetCommands().AddChatCommand(dm_command.c_str(), &DirectMessageCmd);
-
-    // ─────────────────────────────────────────────────────────────
-    // Aquí, **añade** el comando de consola:
     AsaApi::GetCommands().AddConsoleCommand(
-        "TestPlugin.reload",     // se invoca con `cheat TestPlugin.reload`
-        &ConsoleReloadConfig     // apunta al handler
+        "TestPlugin.reload",
+        &ConsoleReloadConfig
     );
 
-    // ─────────────────────────────────────────────────────────────
-
     if (AsaApi::GetApiUtils().GetStatus() == AsaApi::ServerStatus::Ready)
-    {
         OnServerReady();
-    }
 }
-void ConsoleReloadConfig(APlayerController* /*controller*/, FString* /*cmd*/, bool writeToLog)
+
+// 3) ÚNICA definición de ConsoleReloadConfig — **después** de Plugin_Init:
+void ConsoleReloadConfig(APlayerController* controller, FString* /*cmd*/, bool writeToLog)
 {
     try
     {
         LoadConfig();
+        Log::GetLog()->info("[TestPlugin] Config recargado por consola.");
 
-        // Usa tu propio Log en vez de GLog
-        if (writeToLog)
-        {
-            Log::GetLog()->info("[TestPlugin] Config recargado por consola.");
-        }
+        if (controller)
+            if (auto* pc = static_cast<AShooterPlayerController*>(controller))
+                AsaApi::GetApiUtils().SendServerMessage(
+                    pc,
+                    FLinearColor(0.f, 1.f, 0.f, 1.f),
+                    TEXT("TestPlugin: configuración recargada.")
+                );
     }
     catch (const std::exception& ex)
     {
-        Log::GetLog()->error("[TestPlugin] Error recargando config por consola: {}", ex.what());
+        Log::GetLog()->error("[TestPlugin] Error recargando config: {}", ex.what());
+        if (controller)
+            if (auto* pc = static_cast<AShooterPlayerController*>(controller))
+                AsaApi::GetApiUtils().SendServerMessage(
+                    pc,
+                    FLinearColor(1.f, 0.f, 0.f, 1.f),
+                    TEXT("TestPlugin: fallo al recargar configuración.")
+                );
     }
-}
-
-extern "C" __declspec(dllexport) void Plugin_Unload()
-{
-    AsaApi::GetHooks().DisableHook("AShooterGameMode.BeginPlay()", &AShooterGameMode_BeginPlay_original);
-    AsaApi::GetHooks().DisableHook(
-        "AShooterGameMode.SendServerDirectMessage(FString&,FString&,FLinearColor,bool,int,int,FString&,FString&)",
-        &AShooterGameMode_SendServerDirectMessage_original);
-
-    Log::GetLog()->info("TestPlugin Unloaded");
 }
