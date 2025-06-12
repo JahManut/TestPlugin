@@ -1,7 +1,7 @@
 {
-    "FullName": "TestPlugin",
-    "Description": "A test plugin for demonstration purposes.",
+    "FullName": "ColourDinoTest",
+    "Description": "Paint your dinos with Permissions.",
     "Version": "1.0.0",
-    "MinApiVersion": "1.18",
+    "MinApiVersion": "1.19",
     "Author": "JahManut"
 }

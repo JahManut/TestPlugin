@@ -149,7 +149,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>$(SolutionDir)..\AsaApi\out_lib\AsaApi.lib;$(SolutionDir)Lib\AsaApi.lib;$(SolutionDir)Lib\Permissions.lib;$(SolutionDir)Lib\libmysql.lib;$(SolutionDir)Lib\mysqlclient.lib;Permissions.lib;Ws2_32.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)..\AsaApi\out_lib\AsaApi.lib;$(SolutionDir)Lib\AsaApi.lib;$(SolutionDir)Lib\Permissions.lib;$(SolutionDir)Lib\libmysql.lib;$(SolutionDir)Lib\mysqlclient.lib;$(SolutionDir)Lib\ArkShop.lib;Permissions.lib;Ws2_32.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)AsaApi\Plugins\Permissions\Lib</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -185,8 +185,11 @@ git push</Command>
     <ClInclude Include="fmt\xchar.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="Source\Public\ArkShop.h" />
+    <ClInclude Include="Source\Public\DinoColourCommand.h" />
+    <ClInclude Include="Source\Public\DinoColourCommandCommands.h" />
     <ClInclude Include="Source\Public\Permissions.h" />
-    <ClInclude Include="Source\Public\TestPlugin.h" />
+    <ClInclude Include="Source\Public\DinoColourCommandConfig.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\TestPlugin.cpp" />
